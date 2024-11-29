@@ -1,0 +1,7 @@
+[project]
+name = "secret_santa"
+version = "0.1"
+scripts = {secret_santa = "secret_santa.main:main"}
+dependencies = [
+    "numpy"
+]

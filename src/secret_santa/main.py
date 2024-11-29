@@ -14,12 +14,19 @@ def get_argument_parser() -> argparse.ArgumentParser:
         "-i",
         "--input-file",
         type=pathlib.Path,
-        required=False,
+        required=True,
         help=(
             "The path to the input csv file containing participants."
             "Each line of the file must have the following format"
             "Full name, email address, dietary requirement (leave blank, after trailing comma if none)"
         )
+    )
+    parser.add_argument(
+        "-d",
+        "--exchange-date",
+        type=str,
+        required=True,
+        help="The date at which gifts will be exchanged."
     )
     parser.add_argument(
         "-e",
@@ -120,7 +127,7 @@ def main() -> None:
             f"Your secret santa is {recip.name}.\n\n"
 
             "As I'm really busy this year can you please buy them a gift for me, spending no more than £10. "
-            "The gifts will be exchanged at the Winter Social on Tuesday 12th December.\n\n"
+            f"The gifts will be exchanged at the Winter Social on {args.exchange_date}.\n\n"
             "When I'm shopping for presents, I like to spread even more joy by looking in a charity shop. "
             f"{dietry_requirements_line}"
 

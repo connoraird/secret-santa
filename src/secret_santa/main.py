@@ -5,8 +5,7 @@ import pathlib
 from email.mime.text import MIMEText
 import csv
 
-# Email config
-def get_argument_parser() -> argparse.ArgumentParser:
+def get_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Randomly pairs a provided list of secret santa participants and sends each participant an email with their pairing."
     )
@@ -14,7 +13,7 @@ def get_argument_parser() -> argparse.ArgumentParser:
         "-i",
         "--input-file",
         type=pathlib.Path,
-        required=True,
+        required=False,
         help=(
             "The path to the input csv file containing participants."
             "Each line of the file must have the following format"
@@ -22,11 +21,11 @@ def get_argument_parser() -> argparse.ArgumentParser:
         )
     )
     parser.add_argument(
-        "-d",
-        "--exchange-date",
+        "-x",
+        "--exchange-info",
         type=str,
-        required=True,
-        help="The date at which gifts will be exchanged."
+        required=False,
+        help="The date, time and location of the gift exchange. Run with -m/--print-sample-message to see an example version of the final email.",
     )
     parser.add_argument(
         "-e",
@@ -49,6 +48,14 @@ def get_argument_parser() -> argparse.ArgumentParser:
         required=False,
         help="The path to a file at which the pairing information should be stored.",
     )
+    parser.add_argument(
+        "-m",
+        "--print-sample-message",
+        action="store_true",
+        required=False,
+        help="print a sample message.",
+    )
+
     return parser
 
 class Person():
@@ -63,9 +70,41 @@ class Person():
         return "%s, %s, %s, %s"%(self.name, self.email, self.diet, self.recipient)
         
 
+def get_message_text(giver, receiver, args) -> str:
+    dietry_requirements_line = (
+        f"However, before you buy, please be aware {receiver.firstname} "
+        f"has some special requirements: {receiver.diet}.\n\n" if receiver.diet is not None else "\n\n"
+    )
+
+    return (
+        f"Dear {giver.firstname},\n\n"
+
+        f"Your secret santa is {receiver.name}.\n\n"
+
+        "As I'm really busy this year can you please buy them a gift for me, spending no more than £10. "
+        f"The gifts will be exchanged at {args.exchange_info}.\n\n"
+        "When I'm shopping for presents, I like to spread even more joy by looking in a charity shop. "
+        f"{dietry_requirements_line}"
+
+        "Kind Regards,\n\n"
+
+        "Father Christmas"
+    )
+
+
 def main() -> None:
-    parser = get_argument_parser()
+    parser = get_arg_parser()
     args = parser.parse_args()
+
+    if args.print_sample_message:
+        giver = Person("Santa Claus", "s.claus@pole.north", "Cookie only")
+        receiver = Person("Rudolph R Reindeer", "rudolph.r.reindeer@pole.north", "Carrots only")
+        print(get_message_text(giver, receiver, args))
+        return
+    
+    if args.input_file is None:
+        print("Error: the following arguments are required: -i/--input-file")
+        get_arg_parser().parse_args(["-h"])
 
     # Read in list of people from the provided csv
     people = []
@@ -116,28 +155,11 @@ def main() -> None:
     # send e-mail to people
     for p in people:
         recip=people[p.recipient]
-        dietry_requirements_line = (
-            f"However, before you buy, please be aware {recip.firstname} "
-            f"has some special requirements: {recip.diet}.\n\n" if recip.diet is not None else "\n\n"
-        )
-        
-        messageText = (
-            f"Dear {p.firstname},\n\n"
-
-            f"Your secret santa is {recip.name}.\n\n"
-
-            "As I'm really busy this year can you please buy them a gift for me, spending no more than £10. "
-            f"The gifts will be exchanged at the Winter Social on {args.exchange_date}.\n\n"
-            "When I'm shopping for presents, I like to spread even more joy by looking in a charity shop. "
-            f"{dietry_requirements_line}"
-
-            "Kind Regards,\n\n"
-            "Father Christmas"
-        )
+        message_text = get_message_text(p, recip, args)
 
         if args.sender_email:
             print("Sending E-mail To: ", p.name, " at ", p.email)
-            msg = MIMEText(messageText)
+            msg = MIMEText(message_text)
             msg["Subject"] = "Secret Santa"
             msg["From"] = "Santa"
             msg["To"] = p.email

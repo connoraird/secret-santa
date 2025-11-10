@@ -54,7 +54,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
         "--dry-run",
         action="store_true",
         required=False,
-        help="Instead of sending emails, print all messages to the terminal.",
+        help="Instead of sending emails, print all messages to the output file.",
     )
 
     return parser
@@ -73,12 +73,12 @@ class Person():
 
 def get_message_text(giver, receiver, args) -> str:
     dietry_requirements_line = (
-        f"However, before you buy, please be aware {receiver.firstname} "
-        f"has some special requirements: {receiver.diet}.\n\n" if receiver.diet is not None else "\n\n"
+        f"However, before you buy, please be aware {receiver.firstname} has some special requirements:\n\n"
+        f"    {receiver.diet}.\n\n" if receiver.diet is not None else "\n\n"
     )
 
     return (
-        f"Dear {giver.name},\n\n"
+        f"Dear {giver.firstname},\n\n"
 
         f"Your secret santa is {receiver.name}.\n\n"
 
@@ -109,7 +109,7 @@ def main() -> None:
         print("Error: the following arguments are required: -i/--input-file, -x/--exchange-info")
         get_arg_parser().parse_args(["-h"])
 
-    if args.sender_email is not None:
+    if args.sender_email is not None and args.dry_run is None:
         print(f"Emails will be sent from {args.sender_email}. Password is required.")
         sender_password = getpass.getpass()
         if not sender_password:

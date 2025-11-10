@@ -109,7 +109,7 @@ def main() -> None:
         print("Error: the following arguments are required: -i/--input-file, -x/--exchange-info")
         get_arg_parser().parse_args(["-h"])
 
-    if args.sender_email is not None and args.dry_run is None:
+    if args.sender_email is not None and args.dry_run is False:
         print(f"Emails will be sent from {args.sender_email}. Password is required.")
         sender_password = getpass.getpass()
         if not sender_password:

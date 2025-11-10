@@ -73,23 +73,24 @@ class Person():
 
 def get_message_text(giver, receiver, args) -> str:
     dietry_requirements_line = (
-        f"However, before you buy, please be aware {receiver.firstname} has some special requirements:\n\n"
-        f"    {receiver.diet}.\n\n" if receiver.diet is not None else "\n\n"
+        f"Before you buy, please be aware {receiver.firstname} has some special requirements:\n\n"
+        f"    {receiver.diet}.\n\n" if receiver.diet is not None else ""
     )
 
     return (
         f"Dear {giver.firstname},\n\n"
 
         f"Your secret santa is {receiver.name}.\n\n"
-
-        "As I'm really busy this year can you please buy them a gift for me, spending no more than £10. "
-        f"The gifts will be exchanged at {args.exchange_info}.\n\n"
-        "When I'm shopping for presents, I like to spread even more joy by looking in a charity shop. "
+        
+        "As I'm really busy this year can you please buy them a gift for me, spending no more than "
+        f"£10. The gifts will be exchanged at {args.exchange_info}.\n\n"
+        
         f"{dietry_requirements_line}"
 
-        "Kind Regards,\n\n"
+        "Kind Regards,\n"
+        "Father Christmas\n\n"
 
-        "Father Christmas"
+        "P.S. When I'm shopping for presents, I like to spread even more joy by looking in a charity shop. "
     )
 
 

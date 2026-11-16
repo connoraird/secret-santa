@@ -96,8 +96,8 @@ def get_message_text(giver: Person, receiver: Person , args) -> str:
 
         f"Your secret santa is {receiver.name}.\n\n"
         
-        "As I'm really busy this year can you please buy them a gift for me, spending no more than "
-        f"£10. The gifts will be exchanged at {args.exchange_info}.\n\n"
+        "As I'm really busy this year can you please buy them a gift for me, spending up to about £10. "
+        f"The gifts will be exchanged at {args.exchange_info}.\n\n"
         
         f"{gift_preferences_line}"
 

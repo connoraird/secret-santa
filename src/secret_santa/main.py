@@ -18,7 +18,9 @@ def get_arg_parser() -> argparse.ArgumentParser:
         help=(
             "The path to the input csv file containing participants. "
             "Each line of the file must have the following format "
-            "Full name, email address, dietary requirement (leave blank, after trailing comma if none)"
+            "Full name, email address, gift preferences, gift restrictions. "
+            "Gift preferences and restrictions may be blank but the "
+            "commas preceding them must be present."
         )
     )
     parser.add_argument(
@@ -60,21 +62,33 @@ def get_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 class Person():
-    def __init__(self, name, email, diet):
+    def __init__(self, name, email, gift_preferences=None, gift_restrictions=None):
         self.name = name
-        self.firstname=self.name.split()[0]
+        self.firstname=self.name.split()[0].capitalize()
         self.email = email
-        self.diet=diet if diet else None
+        self.gift_preferences = gift_preferences if gift_preferences else None
+        self.gift_restrictions = gift_restrictions if gift_restrictions else None
         self.recipient=None
         
     def __repr__(self):
-        return "%s, %s, %s, %s"%(self.name, self.email, self.diet, self.recipient)
+        return "%s, %s, %s, %s"%(self.name, self.email, self.gift_preferences, self.gift_restrictions, self.recipient)
         
 
-def get_message_text(giver, receiver, args) -> str:
-    dietry_requirements_line = (
-        f"Before you buy, please be aware {receiver.firstname} has some special requirements:\n\n"
-        f"    {receiver.diet}.\n\n" if receiver.diet is not None else ""
+def get_message_text(giver: Person, receiver: Person , args) -> str:
+    gift_preferences_line = (
+        f"Did you know that {receiver.firstname} and I are quite good friends? Anyway, when I asked them "
+        "what gift they might enjoy, they told me:\n\n"
+        f"   \"{receiver.gift_preferences}\"\n\n"
+        if receiver.gift_preferences is not None
+        else ""
+    )
+    
+    gift_restrictions_line = (
+        f"I then asked {receiver.firstname} if they have any dietary requirements or if there was anything "
+        "they particularly dislike or would prefer not to receive. They said:\n\n"
+        f"    \"{receiver.gift_restrictions}\".\n\n"
+        if receiver.gift_restrictions is not None
+        else ""
     )
 
     return (
@@ -85,7 +99,9 @@ def get_message_text(giver, receiver, args) -> str:
         "As I'm really busy this year can you please buy them a gift for me, spending no more than "
         f"£10. The gifts will be exchanged at {args.exchange_info}.\n\n"
         
-        f"{dietry_requirements_line}"
+        f"{gift_preferences_line}"
+
+        f"{gift_restrictions_line}"
 
         "Kind Regards,\n"
         "Father Christmas\n\n"
@@ -101,14 +117,31 @@ def main() -> None:
     sender_password = ""
 
     if args.print_sample_message:
-        giver = Person("Santa Claus", "s.claus@pole.north", "Cookie only")
-        receiver = Person("Rudolph R Reindeer", "rudolph.r.reindeer@pole.north", "If it's not carrots I'm not interested")
+        if not args.exchange_info:
+            args.exchange_info = "Saturday 24 December at the North Pole"
+        giver = Person(
+            "Santa Claus",
+            "s.claus@pole.north",
+            gift_preferences="Traveling around the world really fast",
+            gift_restrictions="Cookie only",
+        )
+        receiver = Person(
+            "Rudolph R Reindeer",
+            "rudolph.r.reindeer@pole.north",
+            gift_preferences="If it's not carrots I'm not interested",
+            gift_restrictions="I already said, carrots!",
+        )
         print(get_message_text(giver, receiver, args))
         return
     
-    if args.input_file is None or args.exchange_info is None:
-        print("Error: the following arguments are required: -i/--input-file, -x/--exchange-info")
-        get_arg_parser().parse_args(["-h"])
+    if args.input_file is None:
+        parser.error("the following argument is required: -i/--input-file")
+    if args.exchange_info is None:
+        parser.error("the following argument is required: -x/--exchange-info")
+    if args.dry_run and args.output_file is None:
+        parser.error("--output-file is required when using --dry-run")
+    if not args.dry_run and not args.sender_email:
+        parser.error("provide --sender-email to send emails, or use --dry-run")
 
     if args.sender_email is not None and args.dry_run is False:
         print(f"Emails will be sent from {args.sender_email}. Password is required.")
@@ -120,14 +153,31 @@ def main() -> None:
     # Read in list of people from the provided csv
     people = []
     with open(args.input_file, newline='') as csvfile:
-        people_reader = csv.reader(csvfile, delimiter=',')
-        i = 0
-        for row in people_reader:
-            if (len(row) < 3):
-                print("Incorrect row format at " + str(i) + ": " + ", ".join(row))
-                exit(0)
-            people.append(Person(row[0], row[1], row[2]))
-            i += 1
+        people_reader = csv.reader(csvfile, delimiter=',', skipinitialspace=True)
+        for line_number, row in enumerate(people_reader, start=1):
+            if len(row) != 4:
+                parser.error(
+                    f"incorrect CSV row at line {line_number}: expected 4 columns, got {len(row)}"
+                )
+            name = row[0].strip()
+            email = row[1].strip()
+            if not name:
+                parser.error(f"missing name at CSV line {line_number}")
+            if not email:
+                parser.error(f"missing email address at CSV line {line_number}")
+
+            people.append(
+                Person(
+                    name=name,
+                    email=email,
+                    gift_preferences=row[2].strip(),
+                    gift_restrictions=row[3].strip(),
+                )
+            )
+
+    if (len(people) < 3):
+        print(f"You need at least 3 people for a secret santa gift swap. Found {len(people)}")
+        exit(0)
 
     print("Found " + str(len(people)) + " people")
 

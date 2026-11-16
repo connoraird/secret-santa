@@ -1,17 +1,20 @@
 # Secret Santa
 
 This tool is a secret santa name randomiser. It reads, from a csv file, a
-list of would be Santas along with their email address and any dietary/present
-preference they may have. This file should be of the following format.
+list of would be Santas along with their email address, gift preferences, and
+any dietary requirements or other gift restrictions. This file should be of
+the following format.
 
 ```csv
-Santa Claus, s.claus@pole.north, Cookie only
-Mrs Claus, m.claus@pole.north, Please! no cookies
-Rudolph R Reindeer, rudolph.r.reindeer@pole.north, If it's not carrots I'm not interested
-Head Elf, elf.1@pole.north, 
+"Santa Claus","s.claus@pole.north","Traveling around the world really fast","Cookie only"
+"Mrs Claus","m.claus@pole.north","Baking","Please! no cookies"
+"Rudolph R Reindeer","rudolph.r.reindeer@pole.north","If it's not carrots I'm not interested","I already said, carrots!"
+"Head Elf","elf.1@pole.north",,
 ```
 
-> Note that `Head Elf` has no special requirements but a `,` must be included after their email.
+Each row must contain a name, email address, gift preferences, and gift
+restrictions. The preferences and restrictions may be empty, but their
+comma-separated columns must remain in place.
 
 
 ## Usage
